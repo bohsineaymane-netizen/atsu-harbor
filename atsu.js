@@ -135,6 +135,7 @@ class DefaultExtension extends MProvider {
         const page = JSON.parse(response.body).mangaPage;
 
         const manga = {};
+        manga.name = page.title;
         manga.imageUrl = this.absoluteImage(page.poster?.largeImage || page.poster?.image);
         manga.description = page.synopsis ?? "";
         const authors = page.authors ?? [];

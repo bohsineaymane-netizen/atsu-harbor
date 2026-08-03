@@ -53,8 +53,9 @@ class DefaultExtension extends MProvider {
     // GET /api/search/popular
     // NOTE: pagination behavior for this endpoint wasn't confirmed. We pass
     // ?page= defensively and stop paging once an empty list comes back.
-    async getPopular(page) {
-        const url = `${this.source.apiUrl}/search/popular?page=${page}`;
+    async getPopular(offset) {
+        const page = Math.floor(offset / 20) + 1;
+const url = `${this.source.apiUrl}/search/popular?page=${page}`;
         const response = await this.client.get(url, this.getHeaders());
         const data = JSON.parse(response.body);
         console.log(data);
@@ -65,7 +66,7 @@ class DefaultExtension extends MProvider {
                 imageUrl: this.absoluteImage(e.image || e.mediumImage || e.smallImage),
                 link: String(e.id)
             })),
-            hasNextPage: items.length > 0
+            hasNextPage: items.length >= 20
         };
     }
 

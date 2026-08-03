@@ -47,6 +47,7 @@ class DefaultExtension extends MProvider {
         const url = `${this.source.apiUrl}/search/popular?page=${page}`;
         const response = await this.client.get(url, this.getHeaders());
         const data = JSON.parse(response.body);
+        console.log(data);
         const items = data.items ?? [];
         return {
             list: items.map(e => ({

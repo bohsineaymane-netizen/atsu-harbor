@@ -20,19 +20,14 @@ class DefaultExtension extends MProvider {
         return {
             "user-agent": this.getPreference("custom_user_agent"),
         };
-absoluteImage(path) {
-    if (!path) return "";
-
-    if (path.startsWith("http")) {
-        return path;
     }
 
-    if (path.startsWith("posters/")) {
-        return `https://cdn.atsu.moe/static/${path}`;
+    // Turns a relative path like "posters/xxxxx.jpg" into an absolute URL.
+    absoluteImage(path) {
+        if (!path) return "";
+        if (path.startsWith("http")) return path;
+        return `${this.source.baseUrl}/${path.replace(/^\/+/, "")}`;
     }
-
-    return `${this.source.baseUrl}/${path.replace(/^\/+/, "")}`;
-}
 
     toStatus(status) {
         if (!status) return 5;
@@ -56,7 +51,7 @@ absoluteImage(path) {
         return {
             list: items.map(e => ({
                 name: e.title,
-                imageUrl: this.absoluteImage(e.largeImage || e.mediumImage || e.smallImage || e.image),
+                imageUrl: this.absoluteImage(e.image || e.mediumImage || e.smallImage),
                 link: String(e.id)
             })),
             hasNextPage: items.length > 0

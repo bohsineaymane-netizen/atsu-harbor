@@ -30,13 +30,7 @@ class DefaultExtension extends MProvider {
         return path;
     }
 
-    // Atsumaru poster API
-    if (path.includes("/posters/")) {
-        const file = path.split("/").pop().replace(/\.(jpg|png|jpeg)$/,"");
-        return `https://cdn.atsu.moe/static/posters/${file}-large.avif`;
-    }
-
-    return `https://atsu.moe/${path.replace(/^\/+/, "")}`;
+    return "https://cdn.atsu.moe" + path;
 }
 
     toStatus(status) {
@@ -53,22 +47,32 @@ class DefaultExtension extends MProvider {
     // GET /api/search/popular
     // NOTE: pagination behavior for this endpoint wasn't confirmed. We pass
     // ?page= defensively and stop paging once an empty list comes back.
-    async getPopular(offset) {
-        const page = Math.floor(offset / 20) + 1;
-const url = `${this.source.apiUrl}/search/popular?page=${page}`;
-        const response = await this.client.get(url, this.getHeaders());
-        const data = JSON.parse(response.body);
-        console.log(data);
-        const items = data.items ?? [];
-        return {
-            list: items.map(e => ({
-                name: e.title,
-                imageUrl: this.absoluteImage(e.image || e.mediumImage || e.smallImage),
-                link: String(e.id)
-            })),
-            hasNextPage: items.length >= 20
-        };
-    }
+    async getPopular(page) {
+    const url =
+        `${this.source.baseUrl}/collections/manga/documents/search` +
+        `?q=*` +
+        `&query_by=title,englishTitle,otherNames,authors,acronyms` +
+        `&page=${page}` +
+        `&per_page=40` +
+        `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity`;
+
+    const response = await this.client.get(url, this.getHeaders());
+    const data = JSON.parse(response.body);
+
+    const items = data.hits?.map(x => x.document) ?? [];
+
+    return {
+        list: items.map(e => ({
+            name: e.title,
+            imageUrl: this.absoluteImage(
+                e.posterMedium || e.posterSmall || e.poster
+            ),
+            link: String(e.id)
+        })),
+
+        hasNextPage: items.length === 40
+    };
+}
 
     // ---- Latest ----
     // No dedicated "latest" endpoint was found, so this currently reuses
@@ -91,40 +95,32 @@ const url = `${this.source.apiUrl}/search/popular?page=${page}`;
     // The response worked without visible evidence of an auth header, so the
     // typesense_api_key preference below is likely unnecessary - left in
     // place as a fallback in case a header is required in some other context.
-    async search(query, page, filters) {
-        const perPage = 12;
-        const apiKey = this.getPreference("typesense_api_key", "");
-        const headers = this.getHeaders();
-        if (apiKey) {
-            headers["x-typesense-api-key"] = apiKey;
-        }
-        const body = {
-            q: query && query.length ? query : "*",
-            query_by: "title,englishTitle",
-            page: page,
-            per_page: perPage
-        };
-        const response = await this.client.post(
-            `${this.source.baseUrl}/collections/manga/documents/search`,
-            headers,
-            body
-        );
-        const data = JSON.parse(response.body);
-        const hits = data.hits ?? [];
-        const list = hits.map(entry => {
-            const doc = entry.document ?? entry;
-            return {
-                name: doc.title,
-                imageUrl: this.absoluteImage(doc.poster || doc.posterMedium || doc.posterSmall),
-                link: String(doc.id)
-            };
-        });
-        const found = data.found ?? list.length;
-        return {
-            list,
-            hasNextPage: page * perPage < found
-        };
-    }
+    async search(query, page) {
+    const url =
+        `${this.source.baseUrl}/collections/manga/documents/search` +
+        `?q=${encodeURIComponent(query)}` +
+        `&query_by=title,englishTitle,otherNames,authors,acronyms` +
+        `&page=${page}` +
+        `&per_page=40` +
+        `&include_fields=id,title,poster,posterMedium,posterSmall`;
+
+    const response = await this.client.get(url, this.getHeaders());
+    const data = JSON.parse(response.body);
+
+    const items = data.hits?.map(x => x.document) ?? [];
+
+    return {
+        list: items.map(e => ({
+            name: e.title,
+            imageUrl: this.absoluteImage(
+                e.posterMedium || e.posterSmall || e.poster
+            ),
+            link: String(e.id)
+        })),
+
+        hasNextPage: items.length === 40
+    };
+}
 
     // ---- Manga Details (+ chapters, fetched inline like MangaDex does) ----
     // GET /api/manga/page?id=<mangaId>

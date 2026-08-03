@@ -28,11 +28,7 @@ absoluteImage(path) {
     }
 
     if (path.startsWith("posters/")) {
-        const filename = path
-            .replace("posters/", "")
-            .replace(".jpg", "");
-
-        return `https://cdn.atsu.moe/static/posters/${filename}-large.avif`;
+        return `https://cdn.atsu.moe/static/${path}`;
     }
 
     return `${this.source.baseUrl}/${path.replace(/^\/+/, "")}`;
@@ -60,7 +56,7 @@ absoluteImage(path) {
         return {
             list: items.map(e => ({
                 name: e.title,
-                imageUrl: this.absoluteImage(e.image || e.mediumImage || e.smallImage),
+                imageUrl: this.absoluteImage(e.largeImage || e.mediumImage || e.smallImage || e.image),
                 link: String(e.id)
             })),
             hasNextPage: items.length > 0

@@ -23,11 +23,21 @@ class DefaultExtension extends MProvider {
     }
 
     // Turns a relative path like "posters/xxxxx.jpg" into an absolute URL.
-    absoluteImage(path) {
-        if (!path) return "";
-        if (path.startsWith("http")) return path;
-        return `${this.source.baseUrl}/${path.replace(/^\/+/, "")}`;
+   absoluteImage(path) {
+    if (!path) return "";
+
+    if (path.startsWith("http")) {
+        return path;
     }
+
+    // Atsumaru poster API
+    if (path.includes("/posters/")) {
+        const file = path.split("/").pop().replace(/\.(jpg|png|jpeg)$/,"");
+        return `https://cdn.atsu.moe/static/posters/${file}-large.avif`;
+    }
+
+    return `https://atsu.moe/${path.replace(/^\/+/, "")}`;
+}
 
     toStatus(status) {
         if (!status) return 5;

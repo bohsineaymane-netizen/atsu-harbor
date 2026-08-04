@@ -139,15 +139,11 @@ class DefaultExtension extends MProvider {
 
 manga.name = page.title;
 
-const poster = typeof page.poster === "object"
-    ? (
-        page.poster.image ||
-        page.poster.smallImage ||
-        page.poster.id
-      )
-    : page.poster;
-
-const poster = page.poster?.image;
+const poster =
+    page.poster?.image ||
+    page.poster?.smallImage ||
+    page.poster?.id ||
+    "";
 
 const posterUrl = this.absoluteImage(poster);
 

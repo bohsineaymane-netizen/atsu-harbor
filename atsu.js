@@ -43,95 +43,76 @@ class DefaultExtension extends MProvider {
         return 5;
     }
 
-    // ---- Popular ----
-    // GET /api/search/popular
-    // NOTE: pagination behavior for this endpoint wasn't confirmed. We pass
-    // ?page= defensively and stop paging once an empty list comes back.
-    async getPopular(page, filter) {
-    let url =
-    `${this.source.baseUrl}/collections/manga/documents/search` +
-    `?q=*` +
-    `&query_by=title,englishTitle,otherNames,authors,acronyms` +
-    `&page=${page}` +
-    `&per_page=40` +
-`&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
+    // ---- Shared browse/search URL builder ----
+    // Both Popular/Latest and Search hit the same Typesense endpoint, the
+    // only difference is q="*" (browse all) vs a real query string, and
+    // whether any Tags checkboxes are checked in `filters`.
+    buildSearchUrl(query, page, filters) {
+        const perPage = 40;
+        const q = query && query.length ? query : "*";
+        let url =
+            `${this.source.baseUrl}/collections/manga/documents/search` +
+            `?q=${encodeURIComponent(q)}` +
+            `&query_by=title,englishTitle,otherNames,authors,acronyms` +
+            `&page=${page}` +
+            `&per_page=${perPage}` +
+            `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
 
-let filters = [];
+        const conditions = ["isAdult:=false", "hidden:!=true"];
 
-if (filter?.tags) {
-    filters.push(`tagIds:=\`${filter.tags}\``);
-}
+        // filters[0] is the "Tags" GroupFilter from getFilterList(). Each
+        // entry is a CheckBox; state === true means the user checked it.
+        const tagsFilter = filters?.[0];
+        if (tagsFilter && Array.isArray(tagsFilter.state)) {
+            const selectedTagIds = tagsFilter.state
+                .filter(box => box.state === true)
+                .map(box => box.value);
+            if (selectedTagIds.length > 0) {
+                conditions.push(`tagIds:=[${selectedTagIds.join(",")}]`);
+            }
+        }
 
-filters.push("isAdult:=false");
-filters.push("hidden:!=true");
+        url += `&filter_by=${encodeURIComponent(conditions.join(" && "))}`;
+        return url;
+    }
 
-url += `&filter_by=${encodeURIComponent(filters.join(" && "))}`;
-    const response = await this.client.get(url, this.getHeaders());
-    const data = JSON.parse(response.body);
+    // ---- Popular / Latest ----
+    // Harbor never passes a filter argument to getPopular/getLatestUpdates -
+    // only search() receives the user's actual filter selections. So these
+    // just delegate to search() with an empty query and default (unchecked)
+    // filter state, matching how every reference extension (e.g.
+    // weebcentral.js) handles it.
+    async getPopular(page) {
+        return this.search("", page, this.getFilterList());
+    }
 
-    const items = data.hits?.map(x => x.document) ?? [];
-
-    return {
-        list: items.map(e => ({
-            name: e.title,
-            imageUrl: this.absoluteImage(
-                e.posterMedium || e.posterSmall || e.poster
-            ),
-            link: String(e.id),
-            tags: e.tags?.map(t => t.name) ?? []
-        })),
-
-        hasNextPage: items.length === 40
-    };
-}
-
-    // ---- Latest ----
-    // No dedicated "latest" endpoint was found, so this currently reuses
-    // Popular as a placeholder. Replace with a real endpoint if one exists
-    // (e.g. /api/search/latest or /api/search/recent).
-    async getLatestUpdates(page, filter) {
-    return this.getPopular(page, filter);
-}
+    async getLatestUpdates(page) {
+        return this.search("", page, this.getFilterList());
+    }
 
     // ---- Search ----
-    // POST https://atsu.moe/collections/manga/documents/search
-    // (baseUrl, not apiUrl - the endpoint sits at the domain root, not /api)
-    //
-    // CONFIRMED against a real typed query ("naruto"). query_by includes
-    // englishTitle - hits like "Renge to Naruto!" (englishTitle "Renge and
-    // Naruto!") and "Boruto: Naruto Next Generations" only make sense as
-    // matches if englishTitle is searched alongside title. per_page:12 was
-    // observed identically on two separate captures, so it's used here for
-    // parity with the real client, though any per_page value works fine.
-    // The response worked without visible evidence of an auth header, so the
-    // typesense_api_key preference below is likely unnecessary - left in
-    // place as a fallback in case a header is required in some other context.
-    async search(query, page) {
-    const url =
-        `${this.source.baseUrl}/collections/manga/documents/search` +
-        `?q=${encodeURIComponent(query)}` +
-        `&query_by=title,englishTitle,otherNames,authors,acronyms` +
-        `&page=${page}` +
-        `&per_page=40` +
-        `&include_fields=id,title,poster,posterMedium,posterSmall`;
+    // GET https://atsu.moe/collections/manga/documents/search
+    // Confirmed working (GET + query string) against real Naruto search
+    // traffic. This is also where tag filtering actually has to live, since
+    // Harbor only ever passes `filters` into search(), never into
+    // getPopular/getLatestUpdates.
+    async search(query, page, filters) {
+        const url = this.buildSearchUrl(query, page, filters ?? []);
+        const response = await this.client.get(url, this.getHeaders());
+        const data = JSON.parse(response.body);
+        const items = data.hits?.map(x => x.document) ?? [];
 
-    const response = await this.client.get(url, this.getHeaders());
-    const data = JSON.parse(response.body);
-
-    const items = data.hits?.map(x => x.document) ?? [];
-
-    return {
-        list: items.map(e => ({
-            name: e.title,
-            imageUrl: this.absoluteImage(
-                e.posterMedium || e.posterSmall || e.poster
-            ),
-            link: String(e.id)
-        })),
-
-        hasNextPage: items.length === 40
-    };
-}
+        return {
+            list: items.map(e => ({
+                name: e.title,
+                imageUrl: this.absoluteImage(
+                    e.posterMedium || e.posterSmall || e.poster
+                ),
+                link: String(e.id)
+            })),
+            hasNextPage: items.length === 40
+        };
+    }
 
     // ---- Manga Details (+ chapters, fetched inline like MangaDex does) ----
     // GET /api/manga/page?id=<mangaId>
@@ -199,22 +180,33 @@ manga.description = page.synopsis ?? "";
         return pages.map(p => `${this.source.baseUrl}${p.image}`);
     }
 
+    // Real Harbor filter schema (type_name/state/values), confirmed against
+    // weebcentral.js. These genre names+ids are pulled directly from a real
+    // atsu.moe manga detail response (One Piece's "genres" array), so they're
+    // confirmed, not guessed - unlike the previous shortlist which mixed in
+    // a "tags" id (Murder:250) alongside "genres" ids (Action:39 etc.),
+    // two different id spaces on atsu.moe's backend.
     getFilterList() {
-    return [
-        {
-            type: "select",
-            name: "tags",
-            label: "Tags",
-            options: [
-                { text: "Murder", value: "250" },
-                { text: "Action", value: "39" },
-                { text: "Adventure", value: "37" },
-                { text: "Comedy", value: "6" },
-                { text: "Fantasy", value: "36" }
-            ]
-        }
-    ];
-}
+        return [
+            {
+                type_name: "GroupFilter",
+                name: "Tags",
+                state: [
+                    ["Action", "39"],
+                    ["Adventure", "37"],
+                    ["Comedy", "6"],
+                    ["Drama", "31"],
+                    ["Fantasy", "36"],
+                    ["Horror", "44"],
+                    ["Mystery", "32"],
+                    ["Sci-Fi", "1"],
+                    ["Slice of Life", "7"],
+                    ["Supernatural", "22"],
+                    ["Tragedy", "5"]
+                ].map(x => ({ type_name: "CheckBox", name: x[0], value: x[1] }))
+            }
+        ];
+    }
 
     getPreference(key, defaultValue) {
         const preferences = new SharedPreferences();

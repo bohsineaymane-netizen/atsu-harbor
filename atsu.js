@@ -57,7 +57,7 @@ class DefaultExtension extends MProvider {
 `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres`;
 
 if (filter?.genres) {
-    url += `&filter_by=genres:${filter.genres}`;
+    url += `&filter_by=genres:${filter.tags}`;
 }
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);
@@ -197,7 +197,7 @@ manga.description = page.synopsis ?? "";
         {
             type: "Dropdown",
             name: "Genre",
-            key: "genres",
+            key: "tags",
             values: [
                 { name: "Action", value: "39" },
                 { name: "Adult", value: "46" },

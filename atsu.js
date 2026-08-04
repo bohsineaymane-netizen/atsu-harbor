@@ -30,7 +30,7 @@ class DefaultExtension extends MProvider {
         return path;
     }
 
-    return "https://atsu.moe/" + path;
+    return "https://cdn.atsu.moe/" + path;
 }
 
     toStatus(status) {
@@ -147,10 +147,10 @@ const poster = typeof page.poster === "object"
       )
     : page.poster;
 
-const posterUrl = this.absoluteImage(poster);
+const poster = page.poster?.image;
 
-manga.imageUrl = posterUrl;
-manga.thumbnailUrl = posterUrl;
+manga.imageUrl = this.absoluteImage(poster);
+manga.thumbnailUrl = this.absoluteImage(poster);
 
 manga.description = page.synopsis ?? "";
         const authors = page.authors ?? [];

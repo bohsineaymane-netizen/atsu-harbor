@@ -8,7 +8,7 @@
     "iconUrl": "https://raw.githubusercontent.com/bohsineaymane-netizen/atsu-harbor/main/icon.png",
     "dateFormat": "",
     "dateFormatLocale": "",
-    "isNsfw": false,
+    "isNsfw": true,
     "hasCloudflare": false,
     "sourceCodeUrl": "https://raw.githubusercontent.com/bohsineaymane-netizen/atsu-harbor/main/atsu.js",
     "apiUrl": "https://atsu.moe/api",

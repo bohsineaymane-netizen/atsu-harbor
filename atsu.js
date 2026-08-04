@@ -47,6 +47,12 @@ class DefaultExtension extends MProvider {
     // Both Popular/Latest and Search hit the same Typesense endpoint, the
     // only difference is q="*" (browse all) vs a real query string, and
     // whether any Tags checkboxes are checked in `filters`.
+    //
+    // filter_by clauses below are copied directly from a captured real
+    // request (tag filter applied on atsu.moe itself), not guessed:
+    // tagIds:=`337` && isAdult:=false && (mbContentRating:=[`Safe`,
+    // `Suggestive`,`Erotica`] || mbContentRating:!=*) && views:>0 &&
+    // hidden:!=true
     buildSearchUrl(query, page, filters) {
         const perPage = 40;
         const q = query && query.length ? query : "*";
@@ -56,21 +62,28 @@ class DefaultExtension extends MProvider {
             `&query_by=title,englishTitle,otherNames,authors,acronyms` +
             `&page=${page}` +
             `&per_page=${perPage}` +
-            `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
-
-        const conditions = ["isAdult:=false", "hidden:!=true"];
+            `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity`;
 
         // filters[0] is the "Tags" GroupFilter from getFilterList(). Each
         // entry is a CheckBox; state === true means the user checked it.
+        // Values are real "tags" ids (e.g. Swordplay=337), NOT "genres" ids -
+        // those are two separate id spaces on atsu.moe's backend and only
+        // tags ids are valid for the tagIds field.
         const tagsFilter = filters?.[0];
-        if (tagsFilter && Array.isArray(tagsFilter.state)) {
-            const selectedTagIds = tagsFilter.state
-                .filter(box => box.state === true)
-                .map(box => box.value);
-            if (selectedTagIds.length > 0) {
-                conditions.push(`tagIds:=[${selectedTagIds.join(",")}]`);
-            }
+        const selectedTagIds = (tagsFilter && Array.isArray(tagsFilter.state))
+            ? tagsFilter.state.filter(box => box.state === true).map(box => box.value)
+            : [];
+
+        const conditions = [];
+        if (selectedTagIds.length === 1) {
+            conditions.push(`tagIds:=\`${selectedTagIds[0]}\``);
+        } else if (selectedTagIds.length > 1) {
+            conditions.push(`tagIds:=[${selectedTagIds.map(id => `\`${id}\``).join(",")}]`);
         }
+        conditions.push("isAdult:=false");
+        conditions.push("(mbContentRating:=[`Safe`,`Suggestive`,`Erotica`] || mbContentRating:!=*)");
+        conditions.push("views:>0");
+        conditions.push("hidden:!=true");
 
         url += `&filter_by=${encodeURIComponent(conditions.join(" && "))}`;
         return url;
@@ -181,28 +194,31 @@ manga.description = page.synopsis ?? "";
     }
 
     // Real Harbor filter schema (type_name/state/values), confirmed against
-    // weebcentral.js. These genre names+ids are pulled directly from a real
-    // atsu.moe manga detail response (One Piece's "genres" array), so they're
-    // confirmed, not guessed - unlike the previous shortlist which mixed in
-    // a "tags" id (Murder:250) alongside "genres" ids (Action:39 etc.),
-    // two different id spaces on atsu.moe's backend.
+    // weebcentral.js. Values below are real "tags" ids (from atsu.moe's own
+    // "tags" array, not "genres") - confirmed by a captured live request
+    // where selecting "Swordplay" on atsu.moe itself produced
+    // `filter_by=tagIds:=`337`` and 337 is Swordplay's id in the tags array.
+    // The previous version used genres ids (Action:39 etc.) here, which
+    // don't exist in the tagIds field at all - that's what caused "no manga
+    // found" for every selection.
     getFilterList() {
         return [
             {
                 type_name: "GroupFilter",
                 name: "Tags",
                 state: [
-                    ["Action", "39"],
-                    ["Adventure", "37"],
-                    ["Comedy", "6"],
-                    ["Drama", "31"],
-                    ["Fantasy", "36"],
-                    ["Horror", "44"],
-                    ["Mystery", "32"],
-                    ["Sci-Fi", "1"],
-                    ["Slice of Life", "7"],
-                    ["Supernatural", "22"],
-                    ["Tragedy", "5"]
+                    ["Swordplay", "337"],
+                    ["Pirates", "705"],
+                    ["Shounen", "38"],
+                    ["Super Powers", "236"],
+                    ["Special Ability", "883"],
+                    ["Military", "230"],
+                    ["Revenge", "227"],
+                    ["Demons", "160"],
+                    ["Zombies", "413"],
+                    ["Magic", "121"],
+                    ["Mythology", "259"],
+                    ["Robots", "318"]
                 ].map(x => ({ type_name: "CheckBox", name: x[0], value: x[1] }))
             }
         ];

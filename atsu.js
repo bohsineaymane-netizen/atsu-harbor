@@ -134,19 +134,12 @@ class DefaultExtension extends MProvider {
         const response = await this.client.get(detailUrl, this.getHeaders());
         const page = JSON.parse(response.body).mangaPage;
 
-        const manga = {};
-        manga.name = page.title;
-        const poster = this.absoluteImage(
-    page.poster?.largeImage ||
-    page.poster?.image ||
+        const poster =
     page.posterMedium ||
     page.posterSmall ||
-    page.poster
-);
+    page.poster;
 
-        manga.imageUrl = poster;
-        manga.thumbnailUrl = poster;
-        manga.cover = poster;
+manga.imageUrl = this.absoluteImage(poster);
         manga.description = page.synopsis ?? "";
         const authors = page.authors ?? [];
         manga.author = authors.filter(a => a.type === "Author").map(a => a.name).join(", ");

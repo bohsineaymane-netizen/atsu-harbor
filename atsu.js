@@ -1,5 +1,5 @@
 const mangayomiSources = [{
-    "name": "Atsumaru",
+    "name": "Atsumaru (atsu.moe)",
     "lang": "en",
     "baseUrl": "https://atsu.moe",
     "apiUrl": "https://atsu.moe/api",

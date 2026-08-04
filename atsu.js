@@ -133,6 +133,10 @@ class DefaultExtension extends MProvider {
         const detailUrl = `${this.source.apiUrl}/manga/page?id=${mangaId}`;
         const response = await this.client.get(detailUrl, this.getHeaders());
         const page = JSON.parse(response.body).mangaPage;
+console.log("ATSU DETAIL PAGE:", page);
+console.log("POSTER:", page.poster);
+console.log("POSTER MEDIUM:", page.posterMedium);
+console.log("POSTER SMALL:", page.posterSmall);
 
         const manga = {};
         manga.name = page.title;

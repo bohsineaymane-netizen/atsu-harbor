@@ -239,9 +239,6 @@ manga.description = page.synopsis ?? "";
             }
         ];
     }
-            }
-        ];
-    }
 
     getPreference(key, defaultValue) {
         const preferences = new SharedPreferences();

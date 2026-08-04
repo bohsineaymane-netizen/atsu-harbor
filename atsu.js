@@ -134,6 +134,8 @@ class DefaultExtension extends MProvider {
         const response = await this.client.get(detailUrl, this.getHeaders());
         const page = JSON.parse(response.body).mangaPage;
 
+        const manga = {};
+        manga.name = page.title;
         const poster =
     page.posterMedium ||
     page.posterSmall ||

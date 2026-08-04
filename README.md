@@ -2,7 +2,7 @@
 
 # 
 
-# A \[Harbor](https://github.com/kodjodevf/mangayomi) source extension that allows users to browse, search, and read manga from \[Atsumaru](https://atsu.moe) inside Harbor.
+# A Harbor source extension that allows users to browse, search, and read manga from \[Atsumaru](https://atsu.moe) inside Harbor.
 
 # 
 
@@ -262,5 +262,5 @@
 
 # 
 
-# Provided for educational and personal use.
+# This project is licensed under the MIT License.
 

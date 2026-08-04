@@ -22,16 +22,26 @@ class DefaultExtension extends MProvider {
         };
     }
 
-    // Turns a relative path like "posters/xxxxx.jpg" into an absolute URL.
-   absoluteImage(path) {
-    if (!path) return "";
-
-    if (path.startsWith("http")) {
-        return path;
+    // Turns a relative path into an absolute cdn.atsu.moe URL. Different
+    // endpoints format this differently - Popular/Search poster fields
+    // already include a leading "/static/" (e.g. "/static/posters/x.jpg"),
+    // but the manga detail page's poster.image field doesn't
+    // ("posters/x.png", no leading slash, no "static/" segment). Without
+    // normalizing both to the same form, the detail page's cover image
+    // built a broken URL missing "/static/" entirely, which is why it was
+    // blank while Popular/Search thumbnails (already in the right format)
+    // worked fine.
+    absoluteImage(path) {
+        if (!path) return "";
+        if (path.startsWith("http")) {
+            return path;
+        }
+        let clean = path.replace(/^\/+/, "");
+        if (!clean.startsWith("static/")) {
+            clean = `static/${clean}`;
+        }
+        return `https://cdn.atsu.moe/${clean}`;
     }
-
-    return "https://cdn.atsu.moe/" + path;
-}
 
     toStatus(status) {
         if (!status) return 5;

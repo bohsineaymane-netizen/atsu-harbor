@@ -136,8 +136,10 @@ class DefaultExtension extends MProvider {
 
 
         const manga = {};
-        manga.name = page.title;
-        const poster = typeof page.poster === "object"
+
+manga.name = page.title;
+
+const poster = typeof page.poster === "object"
     ? (
         page.poster.image ||
         page.poster.smallImage ||
@@ -145,8 +147,12 @@ class DefaultExtension extends MProvider {
       )
     : page.poster;
 
-manga.imageUrl = this.absoluteImage(poster);
-        manga.description = JSON.stringify(page.poster, null, 2);
+const posterUrl = this.absoluteImage(poster);
+
+manga.imageUrl = posterUrl;
+manga.thumbnailUrl = posterUrl;
+
+manga.description = page.synopsis ?? "";
         const authors = page.authors ?? [];
         manga.author = authors.filter(a => a.type === "Author").map(a => a.name).join(", ");
         manga.artist = authors.filter(a => a.type === "Artist").map(a => a.name).join(", ");

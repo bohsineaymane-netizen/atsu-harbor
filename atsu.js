@@ -56,9 +56,12 @@ class DefaultExtension extends MProvider {
     `&per_page=40` +
 `include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
 
-if (this.filter?.tags) {
-    url += `&filter_by=tagIds:=\`${this.filter.tags}\``;
+let filters = [];
+
+if (filter?.tags) {
+    filters.push(`tagIds:=\`${this.filter.tags}\``);
 }
+
 filters.push("isAdult:=false");
 filters.push("hidden:!=true");
 
@@ -203,11 +206,11 @@ manga.description = page.synopsis ?? "";
             name: "tags",
             label: "Tags",
             options: [
-                { name: "Murder", value: "250" },
-                { name: "Action", value: "39" },
-                { name: "Adventure", value: "37" },
-                { name: "Comedy", value: "6" },
-                { name: "Fantasy", value: "36" }
+                { text: "Murder", value: "250" },
+                { text: "Action", value: "39" },
+                { text: "Adventure", value: "37" },
+                { text: "Comedy", value: "6" },
+                { text: "Fantasy", value: "36" }
             ]
         }
     ];

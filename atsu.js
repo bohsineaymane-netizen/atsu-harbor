@@ -48,18 +48,21 @@ class DefaultExtension extends MProvider {
     // NOTE: pagination behavior for this endpoint wasn't confirmed. We pass
     // ?page= defensively and stop paging once an empty list comes back.
     async getPopular(page, filter) {
-       throw new Error("FILTER: " + JSON.stringify(filter));
     let url =
     `${this.source.baseUrl}/collections/manga/documents/search` +
     `?q=*` +
     `&query_by=title,englishTitle,otherNames,authors,acronyms` +
     `&page=${page}` +
     `&per_page=40` +
-`&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres`;
+`include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
 
-if (filter?.genres) {
-    url += `&filter_by=genres:=${filter.genres}`;
+if (this.filter?.tags) {
+    url += `&filter_by=tagIds:=\`${this.filter.tags}\``;
 }
+filters.push("isAdult:=false");
+filters.push("hidden:!=true");
+
+url += `&filter_by=${encodeURIComponent(filters.join(" && "))}`;
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);
 
@@ -72,7 +75,7 @@ if (filter?.genres) {
                 e.posterMedium || e.posterSmall || e.poster
             ),
             link: String(e.id),
-            genres: e.genres?.map(g => g.name) ?? []
+            tags: e.tags?.map(t => t.name) ?? []
         })),
 
         hasNextPage: items.length === 40
@@ -196,23 +199,15 @@ manga.description = page.synopsis ?? "";
     getFilterList() {
     return [
         {
-            type: "Dropdown",
-            name: "Genre",
-            key: "genres",
-            values: [
+            type: "select",
+            name: "tags",
+            label: "Tags",
+            options: [
+                { name: "Murder", value: "250" },
                 { name: "Action", value: "39" },
-                { name: "Adult", value: "46" },
                 { name: "Adventure", value: "37" },
-                { name: "Boys Love", value: "180" },
                 { name: "Comedy", value: "6" },
-                { name: "Drama", value: "31" },
-                { name: "Fantasy", value: "36" },
-                { name: "Girls Love", value: "4" },
-                { name: "Hentai", value: "10" },
-                { name: "Historical", value: "45" },
-                { name: "Horror", value: "44" },
-                { name: "Martial Arts", value: "29" },
-                { name: "Mystery", value: "32" }
+                { name: "Fantasy", value: "36" }
             ]
         }
     ];

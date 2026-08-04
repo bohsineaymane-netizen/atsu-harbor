@@ -57,7 +57,7 @@ class DefaultExtension extends MProvider {
 `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres`;
 
 if (filter?.genres) {
-    url += `&genres=${filter.genres}`;
+    url += `&filter_by=genres:${filter.genres}`;
 }
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);

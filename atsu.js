@@ -151,7 +151,7 @@ console.log("POSTER SMALL:", page.posterSmall);
         manga.imageUrl = poster;
         manga.thumbnailUrl = poster;
         manga.cover = poster;
-        manga.description = page.synopsis ?? "";
+        manga.description = JSON.stringify(page.poster, null, 2);
         const authors = page.authors ?? [];
         manga.author = authors.filter(a => a.type === "Author").map(a => a.name).join(", ");
         manga.artist = authors.filter(a => a.type === "Artist").map(a => a.name).join(", ");

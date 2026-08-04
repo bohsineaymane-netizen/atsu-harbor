@@ -7,7 +7,8 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "version": "1.0.0",
-    "pkgPath": "atsu.js"
+    "pkgPath": "atsu.js",
+    "isNsfw": true
 }];
 
 class DefaultExtension extends MProvider {
@@ -59,10 +60,11 @@ class DefaultExtension extends MProvider {
     // whether any Tags checkboxes are checked in `filters`.
     //
     // filter_by clauses below are copied directly from a captured real
-    // request (tag filter applied on atsu.moe itself), not guessed:
-    // tagIds:=`337` && isAdult:=false && (mbContentRating:=[`Safe`,
-    // `Suggestive`,`Erotica`] || mbContentRating:!=*) && views:>0 &&
-    // hidden:!=true
+    // request (tag filter applied on atsu.moe itself), with the adult-
+    // content exclusion (isAdult:=false and the mbContentRating
+    // Safe/Suggestive/Erotica restriction) deliberately removed so adult
+    // content is included in results. The source is also flagged isNsfw:true
+    // above so Harbor's own adult-content gate governs visibility instead.
     buildSearchUrl(query, page, filters) {
         const perPage = 40;
         const q = query && query.length ? query : "*";
@@ -90,8 +92,6 @@ class DefaultExtension extends MProvider {
         } else if (selectedTagIds.length > 1) {
             conditions.push(`tagIds:=[${selectedTagIds.map(id => `\`${id}\``).join(",")}]`);
         }
-        conditions.push("isAdult:=false");
-        conditions.push("(mbContentRating:=[`Safe`,`Suggestive`,`Erotica`] || mbContentRating:!=*)");
         conditions.push("views:>0");
         conditions.push("hidden:!=true");
 

@@ -48,13 +48,16 @@ class DefaultExtension extends MProvider {
     // NOTE: pagination behavior for this endpoint wasn't confirmed. We pass
     // ?page= defensively and stop paging once an empty list comes back.
     async getPopular(page) {
-    const url =
-        `${this.source.baseUrl}/collections/manga/documents/search` +
-        `?q=*` +
-        `&query_by=title,englishTitle,otherNames,authors,acronyms` +
-        `&page=${page}` +
-        `&per_page=40` +
-        &include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres
+    let url =
+    `${this.source.baseUrl}/collections/manga/documents/search` +
+    `?q=*` +
+    `&query_by=title,englishTitle,otherNames,authors,acronyms` +
+    `&page=${page}` +
+    `&per_page=40` +
+`&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres      
+if (this.filter?.genres) {
+    url += `&genres=${this.filter.genres}`;
+}
 
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);
@@ -67,7 +70,7 @@ class DefaultExtension extends MProvider {
             imageUrl: this.absoluteImage(
                 e.posterMedium || e.posterSmall || e.poster
             ),
-            link: String(e.id)
+            link: String(e.id),
             genre: e.genres?.map(g => g.name) ?? []
         })),
 
@@ -190,9 +193,29 @@ manga.description = page.synopsis ?? "";
     }
 
     getFilterList() {
-        // No filters were discovered for atsu.moe's popular/search endpoints.
-        return [];
-    }
+    return [
+        {
+            type: "Dropdown",
+            name: "Genre",
+            key: "genres",
+            values: [
+                { name: "Action", value: "39" },
+                { name: "Adult", value: "46" },
+                { name: "Adventure", value: "37" },
+                { name: "Boys Love", value: "180" },
+                { name: "Comedy", value: "6" },
+                { name: "Drama", value: "31" },
+                { name: "Fantasy", value: "36" },
+                { name: "Girls Love", value: "4" },
+                { name: "Hentai", value: "10" },
+                { name: "Historical", value: "45" },
+                { name: "Horror", value: "44" },
+                { name: "Martial Arts", value: "29" },
+                { name: "Mystery", value: "32" }
+            ]
+        }
+    ];
+}
 
     getPreference(key, defaultValue) {
         const preferences = new SharedPreferences();

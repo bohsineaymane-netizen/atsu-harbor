@@ -54,12 +54,12 @@ class DefaultExtension extends MProvider {
     `&query_by=title,englishTitle,otherNames,authors,acronyms` +
     `&page=${page}` +
     `&per_page=40` +
-`include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
+`&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,tagIds`;
 
 let filters = [];
 
 if (filter?.tags) {
-    filters.push(`tagIds:=\`${this.filter.tags}\``);
+    filters.push(`tagIds:=\`${filter.tags}\``);
 }
 
 filters.push("isAdult:=false");
@@ -89,9 +89,9 @@ url += `&filter_by=${encodeURIComponent(filters.join(" && "))}`;
     // No dedicated "latest" endpoint was found, so this currently reuses
     // Popular as a placeholder. Replace with a real endpoint if one exists
     // (e.g. /api/search/latest or /api/search/recent).
-    async getLatestUpdates(page) {
-        return this.getPopular(page);
-    }
+    async getLatestUpdates(page, filter) {
+    return this.getPopular(page, filter);
+}
 
     // ---- Search ----
     // POST https://atsu.moe/collections/manga/documents/search

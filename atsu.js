@@ -198,7 +198,7 @@ manga.description = page.synopsis ?? "";
         {
             type: "Dropdown",
             name: "Genre",
-            key: "tags",
+            key: "genres",
             values: [
                 { name: "Action", value: "39" },
                 { name: "Adult", value: "46" },

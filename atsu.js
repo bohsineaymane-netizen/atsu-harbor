@@ -54,11 +54,11 @@ class DefaultExtension extends MProvider {
     `&query_by=title,englishTitle,otherNames,authors,acronyms` +
     `&page=${page}` +
     `&per_page=40` +
-`&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres      
+`&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres`;
+
 if (this.filter?.genres) {
     url += `&genres=${this.filter.genres}`;
 }
-
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);
 
@@ -71,7 +71,7 @@ if (this.filter?.genres) {
                 e.posterMedium || e.posterSmall || e.poster
             ),
             link: String(e.id),
-            genre: e.genres?.map(g => g.name) ?? []
+            genres: e.genres?.map(g => g.name) ?? []
         })),
 
         hasNextPage: items.length === 40

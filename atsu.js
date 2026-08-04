@@ -86,6 +86,11 @@ class DefaultExtension extends MProvider {
         conditions.push("hidden:!=true");
 
         url += `&filter_by=${encodeURIComponent(conditions.join(" && "))}`;
+        // Without this, a q="*" match-all query has no relevance score to
+        // sort by and results come back in a near-arbitrary order - this was
+        // missing before, which is the likely cause of "results aren't
+        // accurate" (the right manga were probably in there, just buried).
+        url += `&sort_by=${encodeURIComponent("views:desc")}`;
         return url;
     }
 
@@ -198,28 +203,42 @@ manga.description = page.synopsis ?? "";
     // "tags" array, not "genres") - confirmed by a captured live request
     // where selecting "Swordplay" on atsu.moe itself produced
     // `filter_by=tagIds:=`337`` and 337 is Swordplay's id in the tags array.
-    // The previous version used genres ids (Action:39 etc.) here, which
-    // don't exist in the tagIds field at all - that's what caused "no manga
-    // found" for every selection.
+    // This list is drawn from atsu.moe's own full tag catalog (2401 tags,
+    // each with a real safeCount), filtered to non-adult, non-metadata
+    // groups (skipping "Work Info"/"Sexual Content"/"Derivative Work" noise
+    // like "Full Color" or "Based on a Novel") and sorted by real safeCount,
+    // rather than hand-picked guesses.
     getFilterList() {
         return [
             {
                 type_name: "GroupFilter",
                 name: "Tags",
                 state: [
-                    ["Swordplay", "337"],
-                    ["Pirates", "705"],
                     ["Shounen", "38"],
-                    ["Super Powers", "236"],
-                    ["Special Ability", "883"],
-                    ["Military", "230"],
-                    ["Revenge", "227"],
-                    ["Demons", "160"],
-                    ["Zombies", "413"],
+                    ["Seinen", "8"],
+                    ["School Life", "42"],
+                    ["Shoujo", "40"],
                     ["Magic", "121"],
-                    ["Mythology", "259"],
-                    ["Robots", "318"]
+                    ["Isekai", "94"],
+                    ["Reincarnation", "126"],
+                    ["Josei", "43"],
+                    ["Love Triangle", "125"],
+                    ["Royalty", "128"],
+                    ["Demons", "160"],
+                    ["Revenge", "227"],
+                    ["Coming of Age", "117"],
+                    ["Super Powers", "236"],
+                    ["Urban Fantasy", "261"],
+                    ["Fantasy World", "642"],
+                    ["Monsters", "395"],
+                    ["Military", "230"],
+                    ["Special Ability", "883"],
+                    ["Swordplay", "337"],
+                    ["Pirates", "705"]
                 ].map(x => ({ type_name: "CheckBox", name: x[0], value: x[1] }))
+            }
+        ];
+    }
             }
         ];
     }

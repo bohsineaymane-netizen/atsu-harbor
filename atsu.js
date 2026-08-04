@@ -149,8 +149,11 @@ const poster = typeof page.poster === "object"
 
 const poster = page.poster?.image;
 
-manga.imageUrl = this.absoluteImage(poster);
-manga.thumbnailUrl = this.absoluteImage(poster);
+const posterUrl = this.absoluteImage(poster);
+
+manga.imageUrl = posterUrl;
+manga.thumbnailUrl = posterUrl;
+manga.cover = posterUrl;
 
 manga.description = page.synopsis ?? "";
         const authors = page.authors ?? [];

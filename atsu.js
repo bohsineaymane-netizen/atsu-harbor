@@ -135,23 +135,36 @@ class DefaultExtension extends MProvider {
         const page = JSON.parse(response.body).mangaPage;
 
         const manga = {};
-        manga.name = page.title;
-        const poster =
+
+manga.name = page.title;
+
+const poster =
     page.posterMedium ||
     page.posterSmall ||
     page.poster;
 
 manga.imageUrl = this.absoluteImage(poster);
-        manga.description = page.synopsis ?? "";
-        const authors = page.authors ?? [];
-        manga.author = authors.filter(a => a.type === "Author").map(a => a.name).join(", ");
-        manga.artist = authors.filter(a => a.type === "Artist").map(a => a.name).join(", ");
-        manga.genre = (page.genres ?? []).map(g => g.name);
-        manga.status = this.toStatus(page.status);
-        // page.chapters is capped (see page.hasMoreChapters) so the full list
-        // still needs the dedicated allChapters endpoint below.
-        manga.chapters = await this.fetchChapters(mangaId);
-        return manga;
+
+manga.description = page.synopsis ?? "";
+
+const authors = page.authors ?? [];
+manga.author = authors
+    .filter(a => a.type === "Author")
+    .map(a => a.name)
+    .join(", ");
+
+manga.artist = authors
+    .filter(a => a.type === "Artist")
+    .map(a => a.name)
+    .join(", ");
+
+manga.genre = (page.genres ?? []).map(g => g.name);
+
+manga.status = this.toStatus(page.status);
+
+manga.chapters = await this.fetchChapters(mangaId);
+
+return manga;
     }
 
     // GET /api/manga/allChapters?mangaId=<id>

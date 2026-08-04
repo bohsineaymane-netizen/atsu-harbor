@@ -54,7 +54,7 @@ class DefaultExtension extends MProvider {
         `&query_by=title,englishTitle,otherNames,authors,acronyms` +
         `&page=${page}` +
         `&per_page=40` +
-        `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity`;
+        &include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres
 
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);
@@ -68,6 +68,7 @@ class DefaultExtension extends MProvider {
                 e.posterMedium || e.posterSmall || e.poster
             ),
             link: String(e.id)
+            genre: e.genres?.map(g => g.name) ?? []
         })),
 
         hasNextPage: items.length === 40

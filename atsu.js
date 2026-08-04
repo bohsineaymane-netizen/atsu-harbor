@@ -48,6 +48,7 @@ class DefaultExtension extends MProvider {
     // NOTE: pagination behavior for this endpoint wasn't confirmed. We pass
     // ?page= defensively and stop paging once an empty list comes back.
     async getPopular(page, filter) {
+       throw new Error("FILTER: " + JSON.stringify(filter));
     let url =
     `${this.source.baseUrl}/collections/manga/documents/search` +
     `?q=*` +
@@ -57,7 +58,7 @@ class DefaultExtension extends MProvider {
 `&include_fields=id,title,poster,posterMedium,posterSmall,type,isAdult,status,mbRating,popularity,genres`;
 
 if (filter?.genres) {
-    url += `&filter_by=genres:${filter.tags}`;
+    url += `&filter_by=genres:=${filter.genres}`;
 }
     const response = await this.client.get(url, this.getHeaders());
     const data = JSON.parse(response.body);

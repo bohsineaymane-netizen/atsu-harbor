@@ -136,13 +136,17 @@ class DefaultExtension extends MProvider {
 
         const manga = {};
         manga.name = page.title;
-        manga.imageUrl = this.absoluteImage(
+        const poster = this.absoluteImage(
     page.poster?.largeImage ||
     page.poster?.image ||
     page.posterMedium ||
     page.posterSmall ||
     page.poster
 );
+
+        manga.imageUrl = poster;
+        manga.thumbnailUrl = poster;
+        manga.cover = poster;
         manga.description = page.synopsis ?? "";
         const authors = page.authors ?? [];
         manga.author = authors.filter(a => a.type === "Author").map(a => a.name).join(", ");

@@ -194,7 +194,7 @@
 
 # \- Written in JavaScript.
 
-# \- Built specifically for Harbor, using Harbor's source extension format (a `mangayomiSources` manifest and a `DefaultExtension` class).
+# \- Built for Harbor using its JavaScript source extension format, including a source manifest (mangayomiSources) and a DefaultExtension implementation.
 
 # \- Converts Atsumaru website data into a format readable by Harbor - mapping manga listings, details, chapters, and page lists into the structures Harbor expects.
 

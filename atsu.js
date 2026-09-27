@@ -199,13 +199,21 @@ manga.description = page.synopsis ?? "";
 
     // ---- Reader / page list ----
     // GET /api/read/chapter?mangaId=<mangaId>&chapterId=<chapterId>
+    //
+    // Page images are now built through absoluteImage() (cdn.atsu.moe),
+    // same as poster images, instead of the old `${baseUrl}${p.image}`
+    // (atsu.moe directly). Posters moved to a separate CDN subdomain at
+    // some point after atsu.moe's update - reader pages were never updated
+    // to match since that CDN split wasn't known yet when getPageList was
+    // originally written, which is the likely cause of "Page failed to
+    // load" in the reader.
     async getPageList(url) {
         const [mangaId, chapterId] = url.split("|");
         const pageUrl = `${this.source.apiUrl}/read/chapter?mangaId=${mangaId}&chapterId=${chapterId}`;
         const response = await this.client.get(pageUrl, this.getHeaders());
         const data = JSON.parse(response.body);
         const pages = data.readChapter?.pages ?? [];
-        return pages.map(p => `${this.source.baseUrl}${p.image}`);
+        return pages.map(p => this.absoluteImage(p.image));
     }
 
     // Real Harbor filter schema (type_name/state/values), confirmed against

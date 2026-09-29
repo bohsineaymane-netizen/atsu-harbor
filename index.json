@@ -1,24 +1,14 @@
-[
-  {
-    "name": "Atsumaru (atsu.moe)",
-    "id": 100000001,
-    "baseUrl": "https://atsu.moe",
-    "lang": "en",
-    "typeSource": "single",
-    "iconUrl": "https://raw.githubusercontent.com/bohsineaymane-netizen/atsu-harbor/main/icon.png",
-    "dateFormat": "",
-    "dateFormatLocale": "",
-    "isNsfw": true,
-    "hasCloudflare": false,
-    "sourceCodeUrl": "https://raw.githubusercontent.com/bohsineaymane-netizen/atsu-harbor/main/atsu.js",
-    "apiUrl": "https://atsu.moe/api",
-    "version": "1.0.0",
-    "isManga": true,
-    "itemType": 0,
-    "isFullData": false,
-    "appMinVerReq": "0.9.116",
-    "additionalParams": "",
-    "sourceCodeLanguage": 1,
-    "notes": ""
-  }
-]
+{
+  "name": "Atsu Harbor",
+  "plugins": [
+    {
+      "id": "atsumaru",
+      "name": "Atsumaru (atsu.moe)",
+      "version": "2.0.0",
+      "lang": "en",
+      "nsfw": true,
+      "icon": "https://raw.githubusercontent.com/bohsineaymane-netizen/atsu-harbor/main/icon.png",
+      "entry": "atsu.js"
+    }
+  ]
+}

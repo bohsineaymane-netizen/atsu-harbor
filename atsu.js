@@ -179,20 +179,51 @@ manga.description = page.synopsis ?? "";
         manga.status = this.toStatus(page.status);
         // page.chapters is capped (see page.hasMoreChapters) so the full list
         // still needs the dedicated allChapters endpoint below.
-        manga.chapters = await this.fetchChapters(mangaId);
+        // page.scanlators (confirmed real data: [{id, name}, ...]) maps each
+        // chapter's scanlationMangaId to a human-readable group name (e.g.
+        // "Alpha", "Asura") - atsu.moe hosts multiple translation groups per
+        // manga, each numbering their own chapters independently, which is
+        // why the same chapter number can appear several times.
+        const scanlatorMap = {};
+        (page.scanlators ?? []).forEach(s => { scanlatorMap[s.id] = s.name; });
+        manga.chapters = await this.fetchChapters(mangaId, scanlatorMap);
         return manga;
     }
 
     // GET /api/manga/allChapters?mangaId=<id>
-    async fetchChapters(mangaId) {
+    //
+    // CONFIRMED against a real response: each chapter carries a
+    // scanlationMangaId linking it to one of several translation groups,
+    // each of which numbers its own "Chapter 1", "Chapter 2"... independently
+    // - that's the source of the duplicate chapters atsu.moe's own site now
+    // has a dropdown to filter. scanlatorMap (built in getDetail from the
+    // manga's real scanlators list) resolves those ids to real names so
+    // Harbor's chapter list can at least show which group each chapter is
+    // from, and the optional preferred_scanlator preference below can filter
+    // down to just one group entirely if set.
+    async fetchChapters(mangaId, scanlatorMap) {
         const url = `${this.source.apiUrl}/manga/allChapters?mangaId=${mangaId}`;
         const response = await this.client.get(url, this.getHeaders());
         const data = JSON.parse(response.body);
-        const chapters = data.chapters ?? [];
+        let chapters = data.chapters ?? [];
+
+        const preferred = (this.getPreference("preferred_scanlator", "") || "").trim().toLowerCase();
+        if (preferred) {
+            const filtered = chapters.filter(ch => {
+                const name = (scanlatorMap[ch.scanlationMangaId] || "").toLowerCase();
+                return name === preferred;
+            });
+            // Only apply the filter if it actually matched something, so a
+            // typo in the preference doesn't silently empty the whole list.
+            if (filtered.length > 0) {
+                chapters = filtered;
+            }
+        }
+
         return chapters.map(ch => ({
             name: ch.title,
             url: `${mangaId}|${ch.id}`,
-            scanlator: "",
+            scanlator: scanlatorMap?.[ch.scanlationMangaId] || "",
             dateUpload: String(ch.createdAt)
         }));
     }
@@ -337,6 +368,16 @@ manga.description = page.synopsis ?? "";
                     "value": "",
                     "dialogTitle": "Typesense API key",
                     "dialogMessage": "Paste the x-typesense-api-key value captured from atsu.moe's network requests, if search fails without it."
+                }
+            },
+            {
+                "key": "preferred_scanlator",
+                "editTextPreference": {
+                    "title": "Preferred Translation Group",
+                    "summary": "Leave blank to show every group's chapters (may include duplicates). Type an exact group name (e.g. Alpha, Asura, Delta) to show only that group.",
+                    "value": "",
+                    "dialogTitle": "Preferred Translation Group",
+                    "dialogMessage": "Enter the exact scanlator/translation group name as shown on atsu.moe (e.g. Alpha, Asura, Delta, Gamma) to filter chapters down to just that group."
                 }
             }
         ];
